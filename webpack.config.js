@@ -62,7 +62,6 @@ module.exports = {
         new NodePolyfillPlugin(),
         new CopyPlugin({
             patterns: [
-                { from: "public/js/", to: "js/" },
                 { from: "public/layui@2.7.6/", to: "layui@2.7.6/" }
             ],
         })

@@ -1,0 +1,70 @@
+body {
+    margin: 0;
+    padding: 0;
+
+    .github-corner {
+        border-bottom: 0;
+        position: fixed;
+        right: 0;
+        text-decoration: none;
+        top: 0;
+        z-index: 1;
+
+        svg {
+            color: #fff;
+            fill: #5fb878;
+            fill: var(--theme-color, #5fb878);
+            height: 80px;
+            width: 80px;
+        }
+    }
+
+    header {
+        margin: 30px 0;
+
+        h1 {
+            text-align: center;
+        }
+    }
+
+    .form {
+        margin: 0 3%;
+
+        .layui-form-item.inline {
+            display: inline-block;
+            margin-right: 20px;
+        }
+    }
+
+    .layui-form-label {
+        padding: 9px 0;
+        width: 90px;
+    }
+
+    .layui-form-label.required:before {
+        content: '* ';
+        color: red;
+    }
+
+    .layui-input-block,
+    .layui-input-inline {
+        margin-left: 100px;
+    }
+
+    .result {
+        margin-top: 20px;
+    }
+
+    .button {
+        background-color: #5fb878;
+    }
+
+    .form-footer {
+        margin-top: 20px;
+        text-align: center;
+
+        .layui-input-block {
+            margin: 0;
+        }
+    }
+}

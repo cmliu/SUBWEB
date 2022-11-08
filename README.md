@@ -20,6 +20,8 @@ web页面都是只提供参数拼接，工作十分简单，参数详见[subconv
 
 下载项目代码，运行
 
+`npm install`
+
 `npm run build`
 
 即可在`dist`目录获得webpack打包后的静态文件。

@@ -51,13 +51,14 @@ export const backendConfig = [{
     label: 'localhost:25500(自建本地服务-推荐)',
     value: 'http://localhost:25500/sub?'
 }, {
+    label: 'sub.limkim.xyz(自建)',
+    value: 'https://sub.limkim.xyz/sub?'
+}, {
     label: 'sub.id9.cc(品云提供-稳定)',
     value: 'https://sub.id9.cc/sub?'
-
 }, {
     label: 'sub.xeton.dev(subconverter作者提供-稳定)',
     value: 'https://sub.xeton.dev/sub?'
-
 }, {
     label: 'api.dler.io(lhie1提供-稳定)',
     value: 'https://api.dler.io/sub?'

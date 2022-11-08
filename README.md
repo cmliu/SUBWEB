@@ -6,7 +6,7 @@
 
 ## 前言
 
-虽然已经有了很不错的项目：[GitHub - CareyWang/sub-web](https://github.com/CareyWang/sub-web) 但是他的远程配置并没有提供[ACL4SSR](https://github.com/ACL4SSR/ACL4SSR)的选项，并且还放了umami的访问统计(匿名)，于是乎我合并了 [ACL4SSR 在线订阅转换](https://acl4ssr-sub.github.io/) 中的部分配置，并且用<u>ts + html</u>的方式重写了一个页面(功能太简单)，同时去除了短链生成功能(有需要的小伙伴可以自行添加)。
+虽然已经有了很不错的项目：[GitHub - CareyWang/sub-web](https://github.com/CareyWang/sub-web) 但是他的远程配置并没有提供[ACL4SSR](https://github.com/ACL4SSR/ACL4SSR)的选项，于是乎我合并了 [ACL4SSR 在线订阅转换](https://acl4ssr-sub.github.io/) 中的部分配置，并且用<u>ts + html</u>的方式重写了一个页面(功能太简单)，同时去除了短链生成功能(有需要的小伙伴可以自行添加)。
 
 
 

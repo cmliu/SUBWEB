@@ -62,7 +62,8 @@ module.exports = {
         new NodePolyfillPlugin(),
         new CopyPlugin({
             patterns: [
-                { from: "public/layui@2.7.6/", to: "layui@2.7.6/" }
+                { from: "public/layui@2.7.6/", to: "layui@2.7.6/" },
+                { from: "public/favicon.ico", to: "favicon.ico" }
             ],
         })
     ],

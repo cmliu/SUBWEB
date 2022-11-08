@@ -12,7 +12,7 @@
 
 ## 关于后端
 
-web页面都是只提供参数拼接，工作十分简单，参数详见[subconverter](https://github.com/tindy2013/subconverter/blob/master/README-cn.md#%E8%B0%83%E7%94%A8%E8%AF%B4%E6%98%8E-%E8%BF%9B%E9%98%B6)，拿到链接后，根据`后端地址`选择的不同，该链接请求的服务器也不同，个人推荐使用本地或个人服务器搭建(安全点吧，可能心理作用)，[subconverter](https://github.com/tindy2013/subconverter)提供了多平台的Release，很简单可以尝试下。
+web页面都是只提供参数拼接，工作十分简单，参数详见[subconverter Readme-cn](https://github.com/tindy2013/subconverter/blob/master/README-cn.md#%E8%B0%83%E7%94%A8%E8%AF%B4%E6%98%8E-%E8%BF%9B%E9%98%B6)，拿到链接后，根据`后端地址`选择的不同，该链接请求的服务器也不同，个人推荐使用本地或个人服务器搭建(安全点吧，可能心理作用)，[subconverter](https://github.com/tindy2013/subconverter)提供了多平台的Release，很简单可以尝试下。
 
 
 
@@ -23,3 +23,9 @@ web页面都是只提供参数拼接，工作十分简单，参数详见[subconv
 `npm run build`
 
 即可在`dist`目录获得webpack打包后的静态文件。
+
+
+
+## 自定义
+
+后端参数很多，页面只提供了少部分常用的，如果有需求，可能需要修改`src/config.ts`中的选项配置，并修改`src/index.ts`中的`generateSubUrl`函数(都是傻瓜式的工作)

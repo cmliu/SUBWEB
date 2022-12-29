@@ -12,7 +12,7 @@
 
 ## 关于后端
 
-web页面都是只提供参数拼接，工作十分简单，参数详见[subconverter Readme-cn](https://github.com/tindy2013/subconverter/blob/master/README-cn.md#%E8%B0%83%E7%94%A8%E8%AF%B4%E6%98%8E-%E8%BF%9B%E9%98%B6)，拿到链接后，根据`后端地址`选择的不同，该链接请求的服务器也不同，个人推荐使用本地或个人服务器搭建(安全点吧，可能心理作用)，[subconverter](https://github.com/tindy2013/subconverter)提供了多平台的Release，很简单可以尝试下。
+web页面都是只提供参数拼接，工作十分简单，参数详见[subconverter Readme-cn](https://github.com/tindy2013/subconverter/blob/master/README-cn.md#%E8%B0%83%E7%94%A8%E8%AF%B4%E6%98%8E-%E8%BF%9B%E9%98%B6)，拿到链接后，根据`后端地址`选择的不同，该链接请求的服务器也不同，个人推荐使用本地或个人服务器搭建(安全点吧，可能心理作用)，subconverter提供了多平台的[Release](https://github.com/tindy2013/subconverter/releases)，很简单可以尝试下。
 
 
 

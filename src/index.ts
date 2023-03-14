@@ -1,5 +1,4 @@
 import './assets/css/index.less';
-import $ from 'jquery';
 import { Options } from './types';
 import { backendConfig, externalConfig, targetConfig } from './config';
 

@@ -48,8 +48,8 @@ export const targetConfig = [{
     value: 'loon'
 }];
 export const backendConfig = [{
-    label: 'localhost:25500(自建本地服务-推荐)',
-    value: 'http://localhost:25500/sub?'
+    label: 'CMLiussss(订阅转换后端-负载均衡)',
+    value: 'https://subapi.fxxk.dedyn.io/sub?'
 }, {
     label: 'sub.limkim.xyz(自建)',
     value: 'https://sub.limkim.xyz/sub?'

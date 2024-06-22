@@ -69,10 +69,10 @@ export const externalConfig = [{
         label: 'CM_Online 默认版 带港美国家(与Github同步)',
         value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online.ini'
     }, {
-        label: 'ACL4SSR_Online_MultiCountry 带港美国家 负载均衡(与Github同步)',
+        label: 'CM_Online_MultiCountry 带港美国家 负载均衡(与Github同步)',
         value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online_MultiCountry.ini'
     }, {
-        label: 'ACL4SSR_Online_MultiCountry_CF 带港美国家、CloudFlareCDN 负载均衡 Worker节点专用(与Github同步)',
+        label: 'CM_Online_MultiCountry_CF 带港美国家、CloudFlareCDN 负载均衡 Worker节点专用(与Github同步)',
         value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online_MultiCountry_CF.ini'
     }, {
         label: 'CM_Online_Full 多国分组(与Github同步)',

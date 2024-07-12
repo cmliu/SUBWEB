@@ -11,6 +11,9 @@ export const targetConfig = [{
     label: 'ClashR新参数',
     value: 'clashr&new_name=true'
 }, {
+    label: '混合订阅（mixed）',
+    value: 'mixed'
+}, {
     label: 'Surge2',
     value: 'surge&ver=2'
 }, {

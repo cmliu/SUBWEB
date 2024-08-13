@@ -12,6 +12,9 @@ export const targetConfig = [{
     value: 'clashr&new_name=true'
 }, {
     label: '混合订阅（mixed）',
+    value: 'singbox'
+}, {
+    label: 'Sing-Box',
     value: 'mixed'
 }, {
     label: 'Surge2',

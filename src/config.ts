@@ -54,8 +54,8 @@ export const targetConfig = [{
     value: 'loon'
 }];
 export const backendConfig = [{
-    label: 'subapi.fxxk.dedyn.io(CM提供-负载均衡后端)',
-    value: 'https://subapi.fxxk.dedyn.io/sub?'
+    label: 'subapi.cmliussss.net(CM提供-负载均衡后端)',
+    value: 'https://subapi.cmliussss.net/sub?'
 }, {
     label: 'v.id9.cc(品云提供-稳定后端)',
     value: 'https://v.id9.cc/sub?'

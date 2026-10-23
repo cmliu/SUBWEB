@@ -106,7 +106,9 @@ let mobileAdvancedOptions = {
     list: false,
     sort: false,
     fdn: false,
-    insert: false
+    insert: false,
+    add_emoji: false,
+    remove_emoji: false
 };
 
 function updateMobileAdvancedButton() {
@@ -119,7 +121,7 @@ function updateMobileAdvancedButton() {
 
 function syncMobileAdvancedOptions() {
     // Sync from desktop checkboxes to mobile modal
-    const desktopOptions = ['emoji', 'append_type', 'append_info', 'scv', 'udp', 'list', 'sort', 'fdn', 'insert'];
+    const desktopOptions = ['emoji', 'append_type', 'append_info', 'scv', 'udp', 'list', 'sort', 'fdn', 'insert', 'add_emoji', 'remove_emoji'];
     desktopOptions.forEach(option => {
         const desktopCheckbox = document.getElementById(option);
         if (desktopCheckbox) {
@@ -340,6 +342,18 @@ function copyText(copyStr) {
     });
 }
 
+// 后端收到 emoji= 时会强制 add_emoji=emoji、remove_emoji=true（原版 subconverter 与 SubConverter-Extended 一致），
+// 因此勾选「加国旗 / 去国旗」任一项时不发送 emoji=，改为显式发送 add_emoji 与 remove_emoji。
+function buildOptionParams(data) {
+    const fineEmoji = data.add_emoji === 'true' || data.remove_emoji === 'true';
+    const flags = ['emoji', 'append_type', 'append_info', 'scv', 'udp', 'list', 'sort', 'fdn', 'insert']
+        .filter(f => !(fineEmoji && f === 'emoji'));
+    let params = flags.map(f => `&${f}=${data[f] || 'false'}`).join('');
+    if (fineEmoji) params += `&add_emoji=${data.add_emoji === 'true'}&remove_emoji=${data.remove_emoji === 'true'}`;
+    if (data.rename) params += `&rename=${encodeURIComponent(data.rename)}`;
+    return params;
+}
+
 function generateSubUrl(data) {
     const backend = data.backend;
     let originUrl = data.url;
@@ -363,7 +377,7 @@ function generateSubUrl(data) {
         newSubUrl += `&filename=${encodeURIComponent(data.name)}`;
     }
 
-    newSubUrl += `&emoji=${data.emoji || 'false'}&append_type=${data.append_type || 'false'}&append_info=${data.append_info || 'false'}&scv=${data.scv || 'false'}&udp=${data.udp || 'false'}&list=${data.list || 'false'}&sort=${data.sort || 'false'}&fdn=${data.fdn || 'false'}&insert=${data.insert || 'false'}`;
+    newSubUrl += buildOptionParams(data);
     subUrl = newSubUrl;
     $('#result').val(subUrl);
     
@@ -537,7 +551,10 @@ function handleFormSubmit(event) {
         list: formData.get('list') === 'on' ? 'true' : 'false',
         sort: formData.get('sort') === 'on' ? 'true' : 'false',
         fdn: formData.get('fdn') === 'on' ? 'true' : 'false',
-        insert: formData.get('insert') === 'on' ? 'true' : 'false'
+        insert: formData.get('insert') === 'on' ? 'true' : 'false',
+        rename: (formData.get('rename') || '').trim(),
+        add_emoji: formData.get('add_emoji') === 'on' ? 'true' : 'false',
+        remove_emoji: formData.get('remove_emoji') === 'on' ? 'true' : 'false'
     };
     
     generateSubUrl(data);
@@ -688,7 +705,10 @@ function handleClashQrCode() {
         list: formData.get('list') === 'on' ? 'true' : 'false',
         sort: formData.get('sort') === 'on' ? 'true' : 'false',
         fdn: formData.get('fdn') === 'on' ? 'true' : 'false',
-        insert: formData.get('insert') === 'on' ? 'true' : 'false'
+        insert: formData.get('insert') === 'on' ? 'true' : 'false',
+        rename: (formData.get('rename') || '').trim(),
+        add_emoji: formData.get('add_emoji') === 'on' ? 'true' : 'false',
+        remove_emoji: formData.get('remove_emoji') === 'on' ? 'true' : 'false'
     };
     
     // Generate subscription URL
@@ -714,7 +734,7 @@ function handleClashQrCode() {
         newSubUrl += `&filename=${encodeURIComponent(data.name)}`;
     }
 
-    newSubUrl += `&emoji=${data.emoji || 'false'}&append_type=${data.append_type || 'false'}&append_info=${data.append_info || 'false'}&scv=${data.scv || 'false'}&udp=${data.udp || 'false'}&list=${data.list || 'false'}&sort=${data.sort || 'false'}&fdn=${data.fdn || 'false'}&insert=${data.insert || 'false'}`;
+    newSubUrl += buildOptionParams(data);
     
     subUrl = newSubUrl;
     

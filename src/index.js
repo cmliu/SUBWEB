@@ -340,6 +340,16 @@ function copyText(copyStr) {
     });
 }
 
+// Self-hosted backends also accept configs relative to their base directory, e.g. config/xxx.ini.
+function isValidConfigRef(config) {
+    try {
+        new URL(config);
+        return true;
+    } catch (e) {
+        return /^[\w.\-\/]+\.(ini|toml|ya?ml|conf)$/i.test(config);
+    }
+}
+
 function generateSubUrl(data) {
     const backend = data.backend;
     let originUrl = data.url;
@@ -510,10 +520,8 @@ function handleFormSubmit(event) {
             return;
         }
         // Validate URL format
-        try {
-            new URL(config);
-        } catch (e) {
-            showToast('自定义配置链接格式不正确，请输入有效的URL', 'error');
+        if (!isValidConfigRef(config)) {
+            showToast('自定义配置格式不正确，请输入有效的URL或后端本地路径（如 config/xxx.ini）', 'error');
             return;
         }
     } else {
@@ -661,10 +669,8 @@ function handleClashQrCode() {
             return;
         }
         // Validate URL format
-        try {
-            new URL(config);
-        } catch (e) {
-            showToast('自定义配置链接格式不正确，请输入有效的URL', 'error');
+        if (!isValidConfigRef(config)) {
+            showToast('自定义配置格式不正确，请输入有效的URL或后端本地路径（如 config/xxx.ini）', 'error');
             return;
         }
     } else {

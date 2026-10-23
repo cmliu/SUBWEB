@@ -335,12 +335,33 @@ function hideToast(toast = null) {
 // Make hideToast globally available for HTML onclick
 window.hideToast = hideToast;
 
+// navigator.clipboard only exists in secure contexts (HTTPS / localhost).
+// On plain-HTTP LAN deployments fall back to a temporary textarea + execCommand('copy').
+function legacyCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.top = '-1000px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    let ok = false;
+    try {
+        ok = document.execCommand('copy');
+    } catch (e) {
+        ok = false;
+    }
+    document.body.removeChild(textarea);
+    return ok;
+}
+
 function copyText(copyStr) {
-    navigator.clipboard.writeText(copyStr).then(() => {
-        showToast('复制成功~', 'success');
-    }, () => {
-        showToast('复制失败, 请手动选择复制', 'error');
-    });
+    const done = ok => showToast(ok ? '复制成功~' : '复制失败, 请手动选择复制', ok ? 'success' : 'error');
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(copyStr).then(() => done(true), () => done(legacyCopy(copyStr)));
+    } else {
+        done(legacyCopy(copyStr));
+    }
 }
 
 function backendLabel(backend) {

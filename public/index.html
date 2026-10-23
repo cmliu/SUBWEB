@@ -159,12 +159,12 @@
                 <div class="card-glass">
                     <div class="card-body">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
-                            <div class="flex items-center justify-between">
+                            <div class="flex items-center justify-between sm:flex-shrink-0 sm:mr-4">
                                 <div class="flex items-center">
                                     <div class="bg-green-100 dark:bg-green-900 w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl mr-4 floating flex-shrink-0 flex items-center justify-center">
                                         <i class="fas fa-cog text-green-600 dark:text-green-400 text-sm sm:text-lg"></i>
                                     </div>
-                                    <h3 class="text-lg sm:text-xl font-bold gradient-text">配置与过滤</h3>
+                                    <h3 class="text-lg sm:text-xl font-bold gradient-text whitespace-nowrap">配置与过滤</h3>
                                 </div>
                                 
                                 <!-- Mobile Advanced Options Toggle Button - same line as title -->
@@ -179,7 +179,7 @@
                             </div>
                             <!-- Advanced Options - Desktop version (unchanged) -->
                             <div class="hidden sm:flex sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-                                <span class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 sm:mr-2">高级选项:</span>
+                                <span class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 sm:mr-2 whitespace-nowrap">高级选项:</span>
                                 <div class="grid grid-cols-3 sm:flex sm:flex-wrap gap-1 sm:gap-2">
                                     <label class="flex items-center text-xs bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/70 dark:hover:bg-blue-800/80 text-gray-700 dark:text-gray-200 px-1.5 sm:px-2 py-1 rounded cursor-pointer transition-colors relative tooltip-container" data-tooltip="启用Emoji">
                                         <input type="checkbox" id="emoji" name="emoji" checked class="mr-1 h-3 w-3">
@@ -217,6 +217,14 @@
                                         <input type="checkbox" id="insert" name="insert" class="mr-1 h-3 w-3">
                                         <i class="fas fa-plus-square text-cyan-500 dark:text-cyan-400 mr-1 text-xs"></i><span>Insert</span>
                                     </label>
+                                    <label class="flex items-center text-xs bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/70 dark:hover:bg-rose-800/80 text-gray-700 dark:text-gray-200 px-1.5 sm:px-2 py-1 rounded cursor-pointer transition-colors relative tooltip-container" data-tooltip="添加国旗（勾选国旗任一项时代替 Emoji）">
+                                        <input type="checkbox" id="add_emoji" name="add_emoji" class="mr-1 h-3 w-3">
+                                        <i class="fas fa-flag text-rose-500 dark:text-rose-400 mr-1 text-xs"></i><span class="hidden sm:inline">加国旗</span><span class="sm:hidden text-xs">加旗</span>
+                                    </label>
+                                    <label class="flex items-center text-xs bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/70 dark:hover:bg-slate-700/80 text-gray-700 dark:text-gray-200 px-1.5 sm:px-2 py-1 rounded cursor-pointer transition-colors relative tooltip-container" data-tooltip="去除原有国旗（勾选国旗任一项时代替 Emoji）">
+                                        <input type="checkbox" id="remove_emoji" name="remove_emoji" class="mr-1 h-3 w-3">
+                                        <i class="fas fa-eraser text-slate-500 dark:text-slate-300 mr-1 text-xs"></i><span class="hidden sm:inline">去国旗</span><span class="sm:hidden text-xs">去旗</span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -251,7 +259,7 @@
                         <!-- Filter Options -->
                         <div class="pt-4">
                             <h4 class="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">节点过滤</h4>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div class="space-y-1">
                                     <label for="include" class="form-label flex items-center text-sm">
                                         <i class="fas fa-plus-circle text-green-500 dark:text-green-400 mr-2"></i>
@@ -270,13 +278,22 @@
                                         placeholder="节点名不包含的关键字，支持正则"
                                         class="input-field hover:bg-gray-100 focus:bg-white text-sm">
                                 </div>
-                                <div class="space-y-1 sm:col-span-2 lg:col-span-1">
+                                <div class="space-y-1">
                                     <label for="name" class="form-label flex items-center text-sm">
                                         <i class="fas fa-file-signature text-blue-500 mr-2"></i>
                                         转换文件名
                                     </label>
                                     <input type="text" id="name" name="name"
                                         placeholder="链接返回的订阅文件名"
+                                        class="input-field hover:bg-gray-100 focus:bg-white text-sm">
+                                </div>
+                                <div class="space-y-1">
+                                    <label for="rename" class="form-label flex items-center text-sm">
+                                        <i class="fas fa-i-cursor text-teal-500 mr-2"></i>
+                                        节点改名
+                                    </label>
+                                    <input type="text" id="rename" name="rename"
+                                        placeholder="可选，格式 原名@新名，多条用 ` 分隔，例如 香港@HK`美国@US（支持正则）"
                                         class="input-field hover:bg-gray-100 focus:bg-white text-sm">
                                 </div>
                             </div>
@@ -483,6 +500,24 @@
                             <i class="fas fa-plus-square text-cyan-500 dark:text-cyan-400"></i>
                         </div>
                         <span class="font-medium">Insert</span>
+                    </div>
+                </div>
+                
+                <div class="mobile-option-card flex items-center justify-center text-sm bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/70 dark:hover:bg-rose-800/80 text-gray-700 dark:text-gray-200 px-3 py-3 rounded-xl cursor-pointer transition-colors border-2 border-transparent" data-option="add_emoji">
+                    <div class="flex flex-col items-center space-y-2 pointer-events-none">
+                        <div class="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center">
+                            <i class="fas fa-flag text-rose-500 dark:text-rose-400"></i>
+                        </div>
+                        <span class="font-medium">加国旗</span>
+                    </div>
+                </div>
+                
+                <div class="mobile-option-card flex items-center justify-center text-sm bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/70 dark:hover:bg-slate-700/80 text-gray-700 dark:text-gray-200 px-3 py-3 rounded-xl cursor-pointer transition-colors border-2 border-transparent" data-option="remove_emoji">
+                    <div class="flex flex-col items-center space-y-2 pointer-events-none">
+                        <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800/50 flex items-center justify-center">
+                            <i class="fas fa-eraser text-slate-500 dark:text-slate-300"></i>
+                        </div>
+                        <span class="font-medium">去国旗</span>
                     </div>
                 </div>
             </div>

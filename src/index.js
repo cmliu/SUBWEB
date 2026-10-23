@@ -389,6 +389,14 @@ async function getBackendInfo(backend) {
 // ua: prefixes need SubConverter-Extended >= v1.10.4 with Clash output;
 // expand / provider_proxy_direct / interval need SubConverter-Extended.
 async function ensureBackendFeatures(data) {
+    // The Extended option block is hidden for other backends: ignore values left in it.
+    const backendKind = await getBackendInfo(data.backend);
+    if (!(backendKind && backendKind.extended)) {
+        data.ua = '';
+        data.expand = 'false';
+        data.provider_proxy_direct = 'true';
+        data.interval = '';
+    }
     const needUa = usesUaPrefix(data);
     const needExt = usesExtendedOptions(data);
     const uaErr = validateUa(data.ua);

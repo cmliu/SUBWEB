@@ -279,15 +279,6 @@
                                         placeholder="链接返回的订阅文件名"
                                         class="input-field hover:bg-gray-100 focus:bg-white text-sm">
                                 </div>
-                                <div class="space-y-1 sm:col-span-2 lg:col-span-3">
-                                    <label for="ua" class="form-label flex items-center text-sm">
-                                        <i class="fas fa-user-secret text-purple-500 mr-2"></i>
-                                        订阅 UA（仅 SubConverter-Extended v1.10.4+，Clash）
-                                    </label>
-                                    <input type="text" id="ua" name="ua"
-                                        placeholder="可选，如 clash-verge/v2.5.8：客户端拉取各 http(s) 订阅时使用的 User-Agent；单个订阅可在行首写 ua:xxx, 覆盖"
-                                        class="input-field hover:bg-gray-100 focus:bg-white text-sm">
-                                </div>
                                 <div class="space-y-1 sm:col-span-2 lg:col-span-2">
                                     <label for="rename" class="form-label flex items-center text-sm">
                                         <i class="fas fa-i-cursor text-teal-500 mr-2"></i>
@@ -313,17 +304,31 @@
                             <h4 class="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-1">Extended 选项</h4>
                             <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">仅 SubConverter-Extended 后端有效；外部配置已自带国旗改名规则时请关闭 Emoji，避免双国旗。</p>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                <label class="flex items-center text-sm text-gray-700 dark:text-gray-200">
-                                    <input type="checkbox" id="classic" name="classic" checked class="mr-2 h-3 w-3">classical 规则集（保留进程名、端口等规则）
-                                </label>
-                                <label class="flex items-center text-sm text-gray-700 dark:text-gray-200">
-                                    <input type="checkbox" id="expand" name="expand" class="mr-2 h-3 w-3">规则内联（expand，不使用 rule-providers）
-                                </label>
-                                <label class="flex items-center text-sm text-gray-700 dark:text-gray-200">
-                                    <input type="checkbox" id="provider_via_proxy" name="provider_via_proxy" class="mr-2 h-3 w-3">provider 通过代理拉取订阅
-                                </label>
+                                <div class="space-y-1 sm:col-span-2 lg:col-span-3">
+                                    <label for="ua" class="form-label flex items-center text-sm">
+                                        <i class="fas fa-user-secret text-purple-500 mr-2"></i>
+                                        订阅 UA（v1.10.4+，Clash 输出）
+                                    </label>
+                                    <input type="text" id="ua" name="ua"
+                                        placeholder="可选，如 clash-verge/v2.5.8：客户端拉取各 http(s) 订阅时使用的 User-Agent；单个订阅可在行首写 ua:xxx, 覆盖"
+                                        class="input-field hover:bg-gray-100 focus:bg-white text-sm">
+                                </div>
+                                <div class="space-y-1 sm:col-span-2 lg:col-span-2">
+                                    <span class="form-label flex items-center text-sm">
+                                        <i class="fas fa-sliders-h text-blue-500 mr-2"></i>
+                                        规则与 provider
+                                    </span>
+                                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-700 dark:text-gray-200 pt-2">
+                                        <label class="flex items-center"><input type="checkbox" id="classic" name="classic" checked class="mr-1 h-3 w-3">classical 规则集（保留进程名、端口等）</label>
+                                        <label class="flex items-center"><input type="checkbox" id="expand" name="expand" class="mr-1 h-3 w-3">规则内联（expand）</label>
+                                        <label class="flex items-center"><input type="checkbox" id="provider_via_proxy" name="provider_via_proxy" class="mr-1 h-3 w-3">provider 通过代理拉取</label>
+                                    </div>
+                                </div>
                                 <div class="space-y-1">
-                                    <label for="interval" class="form-label text-sm">provider 更新间隔（秒）</label>
+                                    <label for="interval" class="form-label flex items-center text-sm">
+                                        <i class="fas fa-clock text-orange-500 mr-2"></i>
+                                        provider 更新间隔（秒）
+                                    </label>
                                     <input type="text" id="interval" name="interval" inputmode="numeric"
                                         placeholder="留空使用后端默认（3600）"
                                         class="input-field hover:bg-gray-100 focus:bg-white text-sm">

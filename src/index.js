@@ -1,7 +1,10 @@
 import './assets/css/main.css';
 import { backendConfig, externalConfig, targetConfig } from './config.js';
+import { buildSubUrl, parseBackendVersion, supportsUaPrefix, usesExtendedOptions, usesUaPrefix, validateInterval, validateUa } from './suburl.js';
 
 let subUrl = '';
+// backend url -> { extended, version } from /version
+const backendInfo = new Map();
 
 // Theme management
 class ThemeManager {
@@ -106,7 +109,9 @@ let mobileAdvancedOptions = {
     list: false,
     sort: false,
     fdn: false,
-    insert: false
+    insert: false,
+    add_emoji: false,
+    remove_emoji: false
 };
 
 function updateMobileAdvancedButton() {
@@ -119,7 +124,7 @@ function updateMobileAdvancedButton() {
 
 function syncMobileAdvancedOptions() {
     // Sync from desktop checkboxes to mobile modal
-    const desktopOptions = ['emoji', 'append_type', 'append_info', 'scv', 'udp', 'list', 'sort', 'fdn', 'insert'];
+    const desktopOptions = ['emoji', 'append_type', 'append_info', 'scv', 'udp', 'list', 'sort', 'fdn', 'insert', 'add_emoji', 'remove_emoji'];
     desktopOptions.forEach(option => {
         const desktopCheckbox = document.getElementById(option);
         if (desktopCheckbox) {
@@ -332,38 +337,121 @@ function hideToast(toast = null) {
 // Make hideToast globally available for HTML onclick
 window.hideToast = hideToast;
 
+// navigator.clipboard only exists in secure contexts (HTTPS / localhost).
+// On plain-HTTP LAN deployments fall back to a temporary textarea + execCommand('copy').
+function legacyCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.top = '-1000px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    let ok = false;
+    try {
+        ok = document.execCommand('copy');
+    } catch (e) {
+        ok = false;
+    }
+    document.body.removeChild(textarea);
+    return ok;
+}
+
 function copyText(copyStr) {
-    navigator.clipboard.writeText(copyStr).then(() => {
-        showToast('复制成功~', 'success');
-    }, () => {
-        showToast('复制失败, 请手动选择复制', 'error');
-    });
+    const done = ok => showToast(ok ? '复制成功~' : '复制失败, 请手动选择复制', ok ? 'success' : 'error');
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(copyStr).then(() => done(true), () => done(legacyCopy(copyStr)));
+    } else {
+        done(legacyCopy(copyStr));
+    }
+}
+
+function backendLabel(backend) {
+    const info = backend.version;
+    if (info && info.extended) return `${backend.label} [Extended ${info.version}]`;
+    return backend.label;
+}
+
+function isValidConfigRef(config) {
+    try {
+        new URL(config);
+        return true;
+    } catch (e) {
+        return /^[\w.\-\/]+\.(ini|toml|ya?ml|conf)$/i.test(config);
+    }
+}
+
+async function getBackendInfo(backend) {
+    if (!backend) return null;
+    if (backendInfo.has(backend)) return backendInfo.get(backend);
+    return checkBackendVersion(backend);
+}
+
+// Validates options that depend on the backend type and sets data.extended.
+// ua: prefixes need SubConverter-Extended >= v1.10.4 with Clash output;
+// expand / provider_proxy_direct / interval need SubConverter-Extended.
+async function ensureBackendFeatures(data) {
+    // The Extended option block is hidden for other backends: ignore values left in it.
+    const backendKind = await getBackendInfo(data.backend);
+    if (!(backendKind && backendKind.extended)) {
+        data.ua = '';
+        data.expand = 'false';
+        data.provider_proxy_direct = 'true';
+        data.interval = '';
+    }
+    const needUa = usesUaPrefix(data);
+    const needExt = usesExtendedOptions(data);
+    const uaErr = validateUa(data.ua);
+    if (uaErr) {
+        showToast(uaErr, 'error');
+        return false;
+    }
+    const intervalErr = validateInterval(data.interval);
+    if (intervalErr) {
+        showToast(intervalErr, 'error');
+        return false;
+    }
+    const info = await getBackendInfo(data.backend);
+    data.extended = !!(info && info.extended);
+    if (needExt && !data.extended) {
+        showToast('规则内联 / provider 选项仅适用于 SubConverter-Extended 后端', 'error');
+        return false;
+    }
+    if (needUa) {
+        if ((data.target || '').split('&')[0] !== 'clash') {
+            showToast('订阅 UA 仅适用于 Clash 输出', 'error');
+            return false;
+        }
+        if (!supportsUaPrefix(info)) {
+            showToast('订阅 UA 需要 SubConverter-Extended v1.10.4 及以上的后端', 'error');
+            return false;
+        }
+    }
+    return true;
+}
+
+// Resolve the currently selected backend URL (select or custom input).
+function currentBackendUrl() {
+    const select = document.getElementById('backendHeader');
+    if (!select) return '';
+    if (select.value === 'custom') {
+        const input = document.getElementById('customBackendHeader');
+        const value = input ? input.value.trim() : '';
+        return value ? autoCompleteBackendUrl(value) : '';
+    }
+    return select.value;
+}
+
+// Show the SubConverter-Extended option block only when the selected backend is Extended.
+async function refreshExtendedOptions() {
+    const block = document.getElementById('extendedOptions');
+    if (!block) return;
+    const info = await getBackendInfo(currentBackendUrl());
+    block.classList.toggle('hidden', !(info && info.extended));
 }
 
 function generateSubUrl(data) {
-    const backend = data.backend;
-    let originUrl = data.url;
-    originUrl = encodeURIComponent(originUrl.replace(/(\n|\r|\n\r)/g, '|'));
-
-    let newSubUrl = `${backend}&url=${originUrl}&target=${data.target}`;
-
-    if (data.config) {
-        newSubUrl += `&config=${encodeURIComponent(data.config)}`;
-    }
-
-    if (data.include) {
-        newSubUrl += `&include=${encodeURIComponent(data.include)}`;
-    }
-
-    if (data.exclude) {
-        newSubUrl += `&exclude=${encodeURIComponent(data.exclude)}`;
-    }
-
-    if (data.name) {
-        newSubUrl += `&filename=${encodeURIComponent(data.name)}`;
-    }
-
-    newSubUrl += `&emoji=${data.emoji || 'false'}&append_type=${data.append_type || 'false'}&append_info=${data.append_info || 'false'}&scv=${data.scv || 'false'}&udp=${data.udp || 'false'}&list=${data.list || 'false'}&sort=${data.sort || 'false'}&fdn=${data.fdn || 'false'}&insert=${data.insert || 'false'}`;
+    const newSubUrl = buildSubUrl(data);
     subUrl = newSubUrl;
     $('#result').val(subUrl);
     
@@ -468,10 +556,11 @@ function handleBackendChange() {
     
     // Update header button text
     updateBackendButtonLabel();
+    refreshExtendedOptions();
 }
 
 // Form submission handler
-function handleFormSubmit(event) {
+async function handleFormSubmit(event) {
     event.preventDefault();
     
     const formData = new FormData(event.target);
@@ -510,10 +599,8 @@ function handleFormSubmit(event) {
             return;
         }
         // Validate URL format
-        try {
-            new URL(config);
-        } catch (e) {
-            showToast('自定义配置链接格式不正确，请输入有效的URL', 'error');
+        if (!isValidConfigRef(config)) {
+            showToast('自定义配置格式不正确，请输入有效的URL或后端本地路径（如 config/xxx.ini）', 'error');
             return;
         }
     } else {
@@ -537,9 +624,18 @@ function handleFormSubmit(event) {
         list: formData.get('list') === 'on' ? 'true' : 'false',
         sort: formData.get('sort') === 'on' ? 'true' : 'false',
         fdn: formData.get('fdn') === 'on' ? 'true' : 'false',
-        insert: formData.get('insert') === 'on' ? 'true' : 'false'
+        insert: formData.get('insert') === 'on' ? 'true' : 'false',
+        ua: (formData.get('ua') || '').trim(),
+        rename: (formData.get('rename') || '').trim(),
+        add_emoji: formData.get('add_emoji') === 'on' ? 'true' : 'false',
+        remove_emoji: formData.get('remove_emoji') === 'on' ? 'true' : 'false',
+        expand: formData.get('expand') === 'on' ? 'true' : 'false',
+        classic: formData.get('classic') === 'on' ? 'true' : 'false',
+        provider_proxy_direct: formData.get('provider_via_proxy') === 'on' ? 'false' : 'true',
+        interval: (formData.get('interval') || '').trim()
     };
     
+    if (!(await ensureBackendFeatures(data))) return;
     generateSubUrl(data);
 }
 
@@ -609,7 +705,7 @@ function handleQrCode() {
 }
 
 // Clash QR Code button handler
-function handleClashQrCode() {
+async function handleClashQrCode() {
     // Get form data first
     const form = document.getElementById('optionsForm');
     if (!form) {
@@ -661,10 +757,8 @@ function handleClashQrCode() {
             return;
         }
         // Validate URL format
-        try {
-            new URL(config);
-        } catch (e) {
-            showToast('自定义配置链接格式不正确，请输入有效的URL', 'error');
+        if (!isValidConfigRef(config)) {
+            showToast('自定义配置格式不正确，请输入有效的URL或后端本地路径（如 config/xxx.ini）', 'error');
             return;
         }
     } else {
@@ -688,33 +782,20 @@ function handleClashQrCode() {
         list: formData.get('list') === 'on' ? 'true' : 'false',
         sort: formData.get('sort') === 'on' ? 'true' : 'false',
         fdn: formData.get('fdn') === 'on' ? 'true' : 'false',
-        insert: formData.get('insert') === 'on' ? 'true' : 'false'
+        insert: formData.get('insert') === 'on' ? 'true' : 'false',
+        ua: (formData.get('ua') || '').trim(),
+        rename: (formData.get('rename') || '').trim(),
+        add_emoji: formData.get('add_emoji') === 'on' ? 'true' : 'false',
+        remove_emoji: formData.get('remove_emoji') === 'on' ? 'true' : 'false',
+        expand: formData.get('expand') === 'on' ? 'true' : 'false',
+        classic: formData.get('classic') === 'on' ? 'true' : 'false',
+        provider_proxy_direct: formData.get('provider_via_proxy') === 'on' ? 'false' : 'true',
+        interval: (formData.get('interval') || '').trim()
     };
     
     // Generate subscription URL
-    const backend_url = data.backend;
-    let originUrl = data.url;
-    originUrl = encodeURIComponent(originUrl.replace(/(\n|\r|\n\r)/g, '|'));
-
-    let newSubUrl = `${backend_url}&url=${originUrl}&target=${data.target}`;
-
-    if (data.config) {
-        newSubUrl += `&config=${encodeURIComponent(data.config)}`;
-    }
-
-    if (data.include) {
-        newSubUrl += `&include=${encodeURIComponent(data.include)}`;
-    }
-
-    if (data.exclude) {
-        newSubUrl += `&exclude=${encodeURIComponent(data.exclude)}`;
-    }
-
-    if (data.name) {
-        newSubUrl += `&filename=${encodeURIComponent(data.name)}`;
-    }
-
-    newSubUrl += `&emoji=${data.emoji || 'false'}&append_type=${data.append_type || 'false'}&append_info=${data.append_info || 'false'}&scv=${data.scv || 'false'}&udp=${data.udp || 'false'}&list=${data.list || 'false'}&sort=${data.sort || 'false'}&fdn=${data.fdn || 'false'}&insert=${data.insert || 'false'}`;
+    if (!(await ensureBackendFeatures(data))) return;
+    const newSubUrl = buildSubUrl(data);
     
     subUrl = newSubUrl;
     
@@ -780,8 +861,9 @@ async function checkBackendVersion(backend) {
         clearTimeout(timeoutId);
         
         if (response.ok) {
-            const data = await response.text();
-            return data.trim() || 'Unknown';
+            const info = parseBackendVersion(await response.text());
+            if (info) backendInfo.set(backend, info);
+            return info;
         }
         return null;
     } catch (error) {
@@ -850,7 +932,7 @@ async function initializeBackends() {
             // Add Lfree backend first
             const lfreeOpt = document.createElement('option');
             lfreeOpt.value = lfreeBackend.value;
-            lfreeOpt.textContent = `${lfreeBackend.label} ⚡ 推荐`;
+            lfreeOpt.textContent = `${backendLabel(lfreeBackend)} ⚡ 推荐`;
             lfreeOpt.selected = shouldSelectLfree;
             backendHeaderSelect.appendChild(lfreeOpt);
             
@@ -866,7 +948,7 @@ async function initializeBackends() {
             otherBackends.forEach(backend => {
                 const opt = document.createElement('option');
                 opt.value = backend.value;
-                opt.textContent = backend.label;
+                opt.textContent = backendLabel(backend);
                 backendHeaderSelect.appendChild(opt);
             });
         } else {
@@ -875,11 +957,11 @@ async function initializeBackends() {
                 const opt = document.createElement('option');
                 opt.value = backend.value;
                 if (index === 0 && !hasSelectedInitial) {
-                    opt.textContent = `${backend.label} ⚡ 最快`;
+                    opt.textContent = `${backendLabel(backend)} ⚡ 最快`;
                     opt.selected = true;
                     currentSelected = backend;
                 } else {
-                    opt.textContent = backend.label;
+                    opt.textContent = backendLabel(backend);
                 }
                 backendHeaderSelect.appendChild(opt);
             });
@@ -1060,8 +1142,10 @@ $(document).ready(() => {
     // Initialize form elements
     initializeForm();
     
-    // Check backend versions
-    initializeBackends();
+    // Check backend versions, then show Extended-only options if applicable
+    initializeBackends().then(refreshExtendedOptions);
+    const customBackendInputEl = document.getElementById('customBackendHeader');
+    if (customBackendInputEl) customBackendInputEl.addEventListener('change', refreshExtendedOptions);
     
     // Custom config toggle
     const customConfigToggle = document.getElementById('customConfigToggle');

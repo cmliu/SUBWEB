@@ -106,6 +106,18 @@ https://your-backend.example/sub?url=...&target=clash&config=...&emoji=true...
 - 这个仓库只负责生成链接，不负责替代后端转换服务。
 - 如果你部署的是公开页面，建议优先使用你自己维护的转换后端，而不是完全依赖公共后端。
 
+### SubConverter-Extended 后端
+
+页面会通过 `/version` 识别 [SubConverter-Extended](https://github.com/Aethersailor/SubConverter-Extended)，
+并在后端列表中标注 `[Extended vX.Y.Z]`。
+
+当后端为 Extended v1.10.4 及以上、输出为 Clash 时，可以使用「订阅 UA」：
+
+- 「订阅 UA」输入框：为所有未指定 UA 的 http(s) 订阅加上 `ua:` 前缀；
+- 单个订阅可在行首手写 `ua:Shadowrocket/2.2,https://...` 覆盖，页面会自动编码 UA（含逗号的 UA 需手动预先编码）。
+
+原版 subconverter 不支持 `ua:` 前缀，选择原版后端时页面会拒绝生成带 UA 的链接。详细说明见 [`docs/EXTENDED.md`](./docs/EXTENDED.md)。
+
 ## 自定义与二次开发
 
 ### 1. 修改目标客户端、默认后端、规则配置
@@ -120,7 +132,8 @@ https://your-backend.example/sub?url=...&target=clash&config=...&emoji=true...
 
 ### 2. 修改链接生成逻辑
 
-编辑 [`src/index.js`](./src/index.js) 中的 `generateSubUrl`。
+链接拼接在 [`src/suburl.js`](./src/suburl.js) 的 `buildSubUrl`（纯函数，测试见 `tests/suburl.test.mjs`，运行 `npm test`），
+页面交互在 [`src/index.js`](./src/index.js) 中的 `generateSubUrl`。
 
 如果你需要：
 

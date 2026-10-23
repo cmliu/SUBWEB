@@ -5,7 +5,8 @@
   "main": "src/index.ts",
   "scripts": {
     "serve": "cross-env NODE_ENV=development webpack serve --open",
-    "build": "cross-env NODE_ENV=production webpack"
+    "build": "cross-env NODE_ENV=production webpack",
+    "test": "node --test \"tests/*.test.mjs\""
   },
   "keywords": [],
   "author": "",

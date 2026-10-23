@@ -340,10 +340,16 @@ function copyText(copyStr) {
     });
 }
 
+// One source per line; handles \r\n / \n / \r, trims and drops empty lines.
+// (The previous /(\n|\r|\n\r)/ replacement turned each \r\n into "||", i.e. an empty source.)
+function joinSourceLines(text) {
+    return String(text || '').split(/\r\n|\n|\r/).map(s => s.trim()).filter(Boolean).join('|');
+}
+
 function generateSubUrl(data) {
     const backend = data.backend;
     let originUrl = data.url;
-    originUrl = encodeURIComponent(originUrl.replace(/(\n|\r|\n\r)/g, '|'));
+    originUrl = encodeURIComponent(joinSourceLines(originUrl));
 
     let newSubUrl = `${backend}&url=${originUrl}&target=${data.target}`;
 
@@ -694,7 +700,7 @@ function handleClashQrCode() {
     // Generate subscription URL
     const backend_url = data.backend;
     let originUrl = data.url;
-    originUrl = encodeURIComponent(originUrl.replace(/(\n|\r|\n\r)/g, '|'));
+    originUrl = encodeURIComponent(joinSourceLines(originUrl));
 
     let newSubUrl = `${backend_url}&url=${originUrl}&target=${data.target}`;
 

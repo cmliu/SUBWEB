@@ -620,6 +620,7 @@ async function handleFormSubmit(event) {
         add_emoji: formData.get('add_emoji') === 'on' ? 'true' : 'false',
         remove_emoji: formData.get('remove_emoji') === 'on' ? 'true' : 'false',
         expand: formData.get('expand') === 'on' ? 'true' : 'false',
+        classic: formData.get('classic') === 'on' ? 'true' : 'false',
         provider_proxy_direct: formData.get('provider_via_proxy') === 'on' ? 'false' : 'true',
         interval: (formData.get('interval') || '').trim()
     };
@@ -777,6 +778,7 @@ async function handleClashQrCode() {
         add_emoji: formData.get('add_emoji') === 'on' ? 'true' : 'false',
         remove_emoji: formData.get('remove_emoji') === 'on' ? 'true' : 'false',
         expand: formData.get('expand') === 'on' ? 'true' : 'false',
+        classic: formData.get('classic') === 'on' ? 'true' : 'false',
         provider_proxy_direct: formData.get('provider_via_proxy') === 'on' ? 'false' : 'true',
         interval: (formData.get('interval') || '').trim()
     };

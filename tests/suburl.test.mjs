@@ -119,3 +119,10 @@ test('validateInterval: empty or positive integer seconds', async () => {
     assert.notEqual(validateInterval('0'), '');
     assert.notEqual(validateInterval('1h'), '');
 });
+
+test('buildSubUrl: classic=true only for extended when set', () => {
+    const base = { backend: 'http://h/sub?', target: 'clash', url: 'https://a.com/s', classic: 'true' };
+    assert.ok(!/classic=/.test(buildSubUrl(base)));
+    assert.ok(buildSubUrl({ ...base, extended: true }).includes('&classic=true'));
+    assert.ok(!/classic=/.test(buildSubUrl({ ...base, extended: true, classic: 'false' })));
+});

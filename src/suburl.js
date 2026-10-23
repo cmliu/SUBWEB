@@ -108,6 +108,8 @@ export function buildSubUrl(data) {
     // SubConverter-Extended only.
     if (data.extended) {
         if (data.expand === 'true') url += '&expand=true';
+        // classical rule-providers keep PROCESS-NAME / DST-PORT etc.; domain/ipcidr ones drop them
+        if (data.classic === 'true') url += '&classic=true';
         if (data.provider_proxy_direct === 'false') url += '&provider_proxy_direct=false';
     }
     return url;

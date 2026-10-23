@@ -83,9 +83,13 @@ test('buildSubUrl: optional common params only when set', () => {
     const base = { backend: 'http://h/sub?', target: 'clash', url: 'https://a.com/s' };
     const plain = buildSubUrl(base);
     assert.ok(!/rename=|add_emoji=|remove_emoji=|expand=|provider_proxy_direct=|interval=/.test(plain));
-    const u = buildSubUrl({ ...base, rename: 'HK@香港`US@美国', add_emoji: 'true', remove_emoji: 'true' });
+    const u = buildSubUrl({ ...base, emoji: 'true', rename: 'HK@香港`US@美国', add_emoji: 'true', remove_emoji: 'false' });
     assert.ok(u.includes('&rename=' + encodeURIComponent('HK@香港`US@美国')));
-    assert.ok(u.includes('&add_emoji=true') && u.includes('&remove_emoji=true'));
+    // emoji= overrides add/remove on the backend, so it must be omitted when they are used
+    assert.ok(!/[?&]emoji=/.test(u));
+    assert.ok(u.includes('&add_emoji=true') && u.includes('&remove_emoji=false'));
+    const v = buildSubUrl({ ...base, emoji: 'true' });
+    assert.ok(v.includes('&emoji=true') && !/add_emoji=|remove_emoji=/.test(v));
 });
 
 test('buildSubUrl: extended-only params require extended flag', () => {
@@ -94,7 +98,18 @@ test('buildSubUrl: extended-only params require extended flag', () => {
     const orig = buildSubUrl(base);
     assert.ok(!/expand=|provider_proxy_direct=|interval=/.test(orig));
     const ext = buildSubUrl({ ...base, extended: true });
-    assert.ok(ext.includes('&expand=true') && ext.includes('&provider_proxy_direct=false') && ext.includes('&interval=7200'));
+    assert.ok(ext.includes('&expand=true') && ext.includes('&provider_proxy_direct=false'));
+    // provider interval is a source prefix, not the managed-config interval= query param
+    assert.ok(!/[?&]interval=/.test(ext));
+    const src = decodeURIComponent(ext.match(/&url=([^&]*)/)[1]);
+    assert.equal(src, 'interval:7200,https://a.com/s');
+});
+
+test('applyDefaultPrefix: interval prefix respects existing one and node links', async () => {
+    const { applyDefaultPrefix } = await import('../src/suburl.js');
+    assert.equal(applyDefaultPrefix('ua:X%2F1,https://a.com/s', 'interval', '600'), 'ua:X%2F1,interval:600,https://a.com/s');
+    assert.equal(applyDefaultPrefix('interval:60,https://a.com/s', 'interval', '600'), 'interval:60,https://a.com/s');
+    assert.equal(applyDefaultPrefix('vless://x@h:1#n', 'interval', '600'), 'vless://x@h:1#n');
 });
 
 test('validateInterval: empty or positive integer seconds', async () => {

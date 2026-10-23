@@ -42,13 +42,18 @@ export function encodeUaPrefix(source) {
     return joinPrefixed(parsed);
 }
 
+// Add "<key>:<value>," to an http(s) source that has no such prefix yet (value used as given).
+export function applyDefaultPrefix(source, key, value) {
+    if (!value) return source;
+    const parsed = parsePrefixed(source);
+    if (!parsed || parsed.prefixes.some(p => p.key === key)) return source;
+    parsed.prefixes.push({ key, value });
+    return joinPrefixed(parsed);
+}
+
 // Add "ua:<ua>," to an http(s) source that has no ua prefix yet.
 export function applyDefaultUa(source, ua) {
-    if (!ua) return source;
-    const parsed = parsePrefixed(source);
-    if (!parsed || parsed.prefixes.some(p => p.key === 'ua')) return source;
-    parsed.prefixes.push({ key: 'ua', value: encodeURIComponent(ua) });
-    return joinPrefixed(parsed);
+    return ua ? applyDefaultPrefix(source, 'ua', encodeURIComponent(ua)) : source;
 }
 
 // Returns '' when valid (or empty), otherwise an error message.
@@ -82,23 +87,28 @@ export function supportsUaPrefix(info) {
 }
 
 export function buildSubUrl(data) {
-    const sources = splitSources(data.url).map(s => applyDefaultUa(encodeUaPrefix(s), data.ua));
+    let sources = splitSources(data.url).map(s => applyDefaultUa(encodeUaPrefix(s), data.ua));
+    // Provider update interval is a SubConverter-Extended source prefix (interval:N,), not the
+    // interval= query parameter (that one is the managed-config update interval).
+    if (data.extended && data.interval) sources = sources.map(s => applyDefaultPrefix(s, 'interval', data.interval));
     let url = `${data.backend}&url=${encodeURIComponent(sources.join('|'))}&target=${data.target}`;
     if (data.config) url += `&config=${encodeURIComponent(data.config)}`;
     if (data.include) url += `&include=${encodeURIComponent(data.include)}`;
     if (data.exclude) url += `&exclude=${encodeURIComponent(data.exclude)}`;
     if (data.name) url += `&filename=${encodeURIComponent(data.name)}`;
-    const flags = ['emoji', 'append_type', 'append_info', 'scv', 'udp', 'list', 'sort', 'fdn', 'insert'];
+    // emoji= overrides add_emoji/remove_emoji on both backends (emoji sets add=emoji, remove=true),
+    // so when the fine-grained switches are used, emoji= is omitted and both are sent explicitly.
+    const fineEmoji = data.add_emoji === 'true' || data.remove_emoji === 'true';
+    const flags = ['emoji', 'append_type', 'append_info', 'scv', 'udp', 'list', 'sort', 'fdn', 'insert']
+        .filter(f => !(fineEmoji && f === 'emoji'));
     url += flags.map(f => `&${f}=${data[f] || 'false'}`).join('');
-    // Optional params supported by both backends: only sent when set, so the backend's pref defaults still apply.
+    if (fineEmoji) url += `&add_emoji=${data.add_emoji === 'true'}&remove_emoji=${data.remove_emoji === 'true'}`;
+    // Optional param supported by both backends: only sent when set.
     if (data.rename) url += `&rename=${encodeURIComponent(data.rename)}`;
-    if (data.add_emoji === 'true') url += '&add_emoji=true';
-    if (data.remove_emoji === 'true') url += '&remove_emoji=true';
     // SubConverter-Extended only.
     if (data.extended) {
         if (data.expand === 'true') url += '&expand=true';
         if (data.provider_proxy_direct === 'false') url += '&provider_proxy_direct=false';
-        if (data.interval) url += `&interval=${encodeURIComponent(data.interval)}`;
     }
     return url;
 }

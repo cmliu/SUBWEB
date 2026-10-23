@@ -109,7 +109,9 @@ let mobileAdvancedOptions = {
     list: false,
     sort: false,
     fdn: false,
-    insert: false
+    insert: false,
+    add_emoji: false,
+    remove_emoji: false
 };
 
 function updateMobileAdvancedButton() {
@@ -122,7 +124,7 @@ function updateMobileAdvancedButton() {
 
 function syncMobileAdvancedOptions() {
     // Sync from desktop checkboxes to mobile modal
-    const desktopOptions = ['emoji', 'append_type', 'append_info', 'scv', 'udp', 'list', 'sort', 'fdn', 'insert'];
+    const desktopOptions = ['emoji', 'append_type', 'append_info', 'scv', 'udp', 'list', 'sort', 'fdn', 'insert', 'add_emoji', 'remove_emoji'];
     desktopOptions.forEach(option => {
         const desktopCheckbox = document.getElementById(option);
         if (desktopCheckbox) {

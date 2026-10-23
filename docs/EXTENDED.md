@@ -23,7 +23,9 @@
 5. 链接生成逻辑去重：表单提交与二维码两处重复的拼接代码合并为 `buildSubUrl()`。
 6. 后端预设增加「自建 Extended 服务」(`http://localhost:25510/sub?`)。
 
-不在范围：Extended 的其他专属参数（`provider_proxy_direct`、`expand` 等）界面化；需要时再迭代。
+7. 通用可选参数（原版与 Extended 均支持，仅在设置时附加，未设置时沿用后端 pref 默认）：`rename`、`add_emoji`、`remove_emoji`。
+8. Extended 专属选项：选择 Extended 后端时显示「Extended 选项」区块（`expand` 规则内联、`provider_proxy_direct=false` provider 走代理、`interval` 更新间隔）；
+   非 Extended 后端隐藏，且即使填写也不会附加到链接，生成时若检测到非 Extended 后端会提示。
 
 ## 测试
 - 纯函数位于 `src/suburl.js`，单元测试 `tests/suburl.test.mjs`，运行 `npm test`（Node 内置 test runner，无新依赖）。
@@ -34,3 +36,4 @@
 |---|---|---|
 | 2026-10-23 | 规划、测试、实现 | 单元测试 10/10 通过；`npm run build` 成功 |
 | 2026-10-23 | 真实后端验证 | Extended v1.10.5：默认 UA 与逐行 `ua:` 分别写入对应 provider 的 `header.User-Agent`，并覆盖请求方 UA；v1.10.3 与原版正确判定为不支持；原版后端不带 UA 的链接正常 (200) |
+| 2026-10-23 | 通用参数与 Extended 选项 | 单元测试 13/13；页面构建与真实后端验证见提交记录 |

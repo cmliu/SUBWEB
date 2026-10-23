@@ -90,7 +90,28 @@ export function buildSubUrl(data) {
     if (data.name) url += `&filename=${encodeURIComponent(data.name)}`;
     const flags = ['emoji', 'append_type', 'append_info', 'scv', 'udp', 'list', 'sort', 'fdn', 'insert'];
     url += flags.map(f => `&${f}=${data[f] || 'false'}`).join('');
+    // Optional params supported by both backends: only sent when set, so the backend's pref defaults still apply.
+    if (data.rename) url += `&rename=${encodeURIComponent(data.rename)}`;
+    if (data.add_emoji === 'true') url += '&add_emoji=true';
+    if (data.remove_emoji === 'true') url += '&remove_emoji=true';
+    // SubConverter-Extended only.
+    if (data.extended) {
+        if (data.expand === 'true') url += '&expand=true';
+        if (data.provider_proxy_direct === 'false') url += '&provider_proxy_direct=false';
+        if (data.interval) url += `&interval=${encodeURIComponent(data.interval)}`;
+    }
     return url;
+}
+
+// Returns '' when valid (or empty), otherwise an error message.
+export function validateInterval(value) {
+    if (!value) return '';
+    return /^[1-9]\d*$/.test(value) ? '' : 'provider 更新间隔必须是正整数（秒）';
+}
+
+// True when any SubConverter-Extended-only option is set.
+export function usesExtendedOptions(data) {
+    return data.expand === 'true' || data.provider_proxy_direct === 'false' || !!data.interval;
 }
 
 // True when any source carries a ua prefix (explicit or via the default UA field).

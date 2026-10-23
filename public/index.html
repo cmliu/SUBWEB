@@ -288,6 +288,43 @@
                                         placeholder="可选，如 clash-verge/v2.5.8：客户端拉取各 http(s) 订阅时使用的 User-Agent；单个订阅可在行首写 ua:xxx, 覆盖"
                                         class="input-field hover:bg-gray-100 focus:bg-white text-sm">
                                 </div>
+                                <div class="space-y-1 sm:col-span-2 lg:col-span-2">
+                                    <label for="rename" class="form-label flex items-center text-sm">
+                                        <i class="fas fa-i-cursor text-teal-500 mr-2"></i>
+                                        节点改名（rename）
+                                    </label>
+                                    <input type="text" id="rename" name="rename"
+                                        placeholder="可选，格式 原名@新名，多条用 ` 分隔，例如 香港@HK`美国@US（支持正则）"
+                                        class="input-field hover:bg-gray-100 focus:bg-white text-sm">
+                                </div>
+                                <div class="space-y-1">
+                                    <span class="form-label flex items-center text-sm">
+                                        <i class="fas fa-flag text-red-500 mr-2"></i>
+                                        国旗（覆盖后端默认）
+                                    </span>
+                                    <div class="flex items-center gap-4 text-sm text-gray-700 dark:text-gray-200 pt-2">
+                                        <label class="flex items-center"><input type="checkbox" id="add_emoji" name="add_emoji" class="mr-1 h-3 w-3">添加国旗</label>
+                                        <label class="flex items-center"><input type="checkbox" id="remove_emoji" name="remove_emoji" class="mr-1 h-3 w-3">去除原有国旗</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="extendedOptions" class="pt-4 hidden">
+                            <h4 class="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-1">Extended 选项</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">仅 SubConverter-Extended 后端有效；外部配置已自带国旗改名规则时请关闭 Emoji，避免双国旗。</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <label class="flex items-center text-sm text-gray-700 dark:text-gray-200">
+                                    <input type="checkbox" id="expand" name="expand" class="mr-2 h-3 w-3">规则内联（expand，不使用 rule-providers）
+                                </label>
+                                <label class="flex items-center text-sm text-gray-700 dark:text-gray-200">
+                                    <input type="checkbox" id="provider_via_proxy" name="provider_via_proxy" class="mr-2 h-3 w-3">provider 通过代理拉取订阅
+                                </label>
+                                <div class="space-y-1">
+                                    <label for="interval" class="form-label text-sm">provider 更新间隔（秒）</label>
+                                    <input type="text" id="interval" name="interval" inputmode="numeric"
+                                        placeholder="留空使用后端默认（3600）"
+                                        class="input-field hover:bg-gray-100 focus:bg-white text-sm">
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -78,3 +78,29 @@ test('buildSubUrl: original behaviour kept, ua applied per line', () => {
     const src = decodeURIComponent(u2.match(/&url=([^&]*)/)[1]);
     assert.equal(src, 'ua:clash-verge%2Fv2.5.8,https://a.com/s|ua:Shadowrocket%2F2.2,https://b.com/s');
 });
+
+test('buildSubUrl: optional common params only when set', () => {
+    const base = { backend: 'http://h/sub?', target: 'clash', url: 'https://a.com/s' };
+    const plain = buildSubUrl(base);
+    assert.ok(!/rename=|add_emoji=|remove_emoji=|expand=|provider_proxy_direct=|interval=/.test(plain));
+    const u = buildSubUrl({ ...base, rename: 'HK@香港`US@美国', add_emoji: 'true', remove_emoji: 'true' });
+    assert.ok(u.includes('&rename=' + encodeURIComponent('HK@香港`US@美国')));
+    assert.ok(u.includes('&add_emoji=true') && u.includes('&remove_emoji=true'));
+});
+
+test('buildSubUrl: extended-only params require extended flag', () => {
+    const base = { backend: 'http://h/sub?', target: 'clash', url: 'https://a.com/s',
+        expand: 'true', provider_proxy_direct: 'false', interval: '7200' };
+    const orig = buildSubUrl(base);
+    assert.ok(!/expand=|provider_proxy_direct=|interval=/.test(orig));
+    const ext = buildSubUrl({ ...base, extended: true });
+    assert.ok(ext.includes('&expand=true') && ext.includes('&provider_proxy_direct=false') && ext.includes('&interval=7200'));
+});
+
+test('validateInterval: empty or positive integer seconds', async () => {
+    const { validateInterval } = await import('../src/suburl.js');
+    assert.equal(validateInterval(''), '');
+    assert.equal(validateInterval('3600'), '');
+    assert.notEqual(validateInterval('0'), '');
+    assert.notEqual(validateInterval('1h'), '');
+});

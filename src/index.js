@@ -1,6 +1,6 @@
 import './assets/css/main.css';
 import { backendConfig, externalConfig, targetConfig } from './config.js';
-import { buildSubUrl, parseBackendVersion, supportsUaPrefix, usesUaPrefix, validateUa } from './suburl.js';
+import { buildSubUrl, parseBackendVersion, supportsUaPrefix, usesExtendedOptions, usesUaPrefix, validateInterval, validateUa } from './suburl.js';
 
 let subUrl = '';
 // backend url -> { extended, version } from /version
@@ -379,25 +379,65 @@ function isValidConfigRef(config) {
     }
 }
 
-// The ua: source prefix only works on SubConverter-Extended >= v1.10.4 with Clash output.
-async function ensureUaSupported(data) {
-    if (!usesUaPrefix(data)) return true;
-    const err = validateUa(data.ua);
-    if (err) {
-        showToast(err, 'error');
+async function getBackendInfo(backend) {
+    if (!backend) return null;
+    if (backendInfo.has(backend)) return backendInfo.get(backend);
+    return checkBackendVersion(backend);
+}
+
+// Validates options that depend on the backend type and sets data.extended.
+// ua: prefixes need SubConverter-Extended >= v1.10.4 with Clash output;
+// expand / provider_proxy_direct / interval need SubConverter-Extended.
+async function ensureBackendFeatures(data) {
+    const needUa = usesUaPrefix(data);
+    const needExt = usesExtendedOptions(data);
+    const uaErr = validateUa(data.ua);
+    if (uaErr) {
+        showToast(uaErr, 'error');
         return false;
     }
-    if ((data.target || '').split('&')[0] !== 'clash') {
-        showToast('订阅 UA 仅适用于 Clash 输出', 'error');
+    const intervalErr = validateInterval(data.interval);
+    if (intervalErr) {
+        showToast(intervalErr, 'error');
         return false;
     }
-    let info = backendInfo.get(data.backend);
-    if (!info) info = await checkBackendVersion(data.backend);
-    if (!supportsUaPrefix(info)) {
-        showToast('订阅 UA 需要 SubConverter-Extended v1.10.4 及以上的后端', 'error');
+    const info = await getBackendInfo(data.backend);
+    data.extended = !!(info && info.extended);
+    if (needExt && !data.extended) {
+        showToast('规则内联 / provider 选项仅适用于 SubConverter-Extended 后端', 'error');
         return false;
+    }
+    if (needUa) {
+        if ((data.target || '').split('&')[0] !== 'clash') {
+            showToast('订阅 UA 仅适用于 Clash 输出', 'error');
+            return false;
+        }
+        if (!supportsUaPrefix(info)) {
+            showToast('订阅 UA 需要 SubConverter-Extended v1.10.4 及以上的后端', 'error');
+            return false;
+        }
     }
     return true;
+}
+
+// Resolve the currently selected backend URL (select or custom input).
+function currentBackendUrl() {
+    const select = document.getElementById('backendHeader');
+    if (!select) return '';
+    if (select.value === 'custom') {
+        const input = document.getElementById('customBackendHeader');
+        const value = input ? input.value.trim() : '';
+        return value ? autoCompleteBackendUrl(value) : '';
+    }
+    return select.value;
+}
+
+// Show the SubConverter-Extended option block only when the selected backend is Extended.
+async function refreshExtendedOptions() {
+    const block = document.getElementById('extendedOptions');
+    if (!block) return;
+    const info = await getBackendInfo(currentBackendUrl());
+    block.classList.toggle('hidden', !(info && info.extended));
 }
 
 function generateSubUrl(data) {
@@ -506,6 +546,7 @@ function handleBackendChange() {
     
     // Update header button text
     updateBackendButtonLabel();
+    refreshExtendedOptions();
 }
 
 // Form submission handler
@@ -574,10 +615,16 @@ async function handleFormSubmit(event) {
         sort: formData.get('sort') === 'on' ? 'true' : 'false',
         fdn: formData.get('fdn') === 'on' ? 'true' : 'false',
         insert: formData.get('insert') === 'on' ? 'true' : 'false',
-        ua: (formData.get('ua') || '').trim()
+        ua: (formData.get('ua') || '').trim(),
+        rename: (formData.get('rename') || '').trim(),
+        add_emoji: formData.get('add_emoji') === 'on' ? 'true' : 'false',
+        remove_emoji: formData.get('remove_emoji') === 'on' ? 'true' : 'false',
+        expand: formData.get('expand') === 'on' ? 'true' : 'false',
+        provider_proxy_direct: formData.get('provider_via_proxy') === 'on' ? 'false' : 'true',
+        interval: (formData.get('interval') || '').trim()
     };
     
-    if (!(await ensureUaSupported(data))) return;
+    if (!(await ensureBackendFeatures(data))) return;
     generateSubUrl(data);
 }
 
@@ -725,11 +772,17 @@ async function handleClashQrCode() {
         sort: formData.get('sort') === 'on' ? 'true' : 'false',
         fdn: formData.get('fdn') === 'on' ? 'true' : 'false',
         insert: formData.get('insert') === 'on' ? 'true' : 'false',
-        ua: (formData.get('ua') || '').trim()
+        ua: (formData.get('ua') || '').trim(),
+        rename: (formData.get('rename') || '').trim(),
+        add_emoji: formData.get('add_emoji') === 'on' ? 'true' : 'false',
+        remove_emoji: formData.get('remove_emoji') === 'on' ? 'true' : 'false',
+        expand: formData.get('expand') === 'on' ? 'true' : 'false',
+        provider_proxy_direct: formData.get('provider_via_proxy') === 'on' ? 'false' : 'true',
+        interval: (formData.get('interval') || '').trim()
     };
     
     // Generate subscription URL
-    if (!(await ensureUaSupported(data))) return;
+    if (!(await ensureBackendFeatures(data))) return;
     const newSubUrl = buildSubUrl(data);
     
     subUrl = newSubUrl;
@@ -1077,8 +1130,10 @@ $(document).ready(() => {
     // Initialize form elements
     initializeForm();
     
-    // Check backend versions
-    initializeBackends();
+    // Check backend versions, then show Extended-only options if applicable
+    initializeBackends().then(refreshExtendedOptions);
+    const customBackendInputEl = document.getElementById('customBackendHeader');
+    if (customBackendInputEl) customBackendInputEl.addEventListener('change', refreshExtendedOptions);
     
     // Custom config toggle
     const customConfigToggle = document.getElementById('customConfigToggle');

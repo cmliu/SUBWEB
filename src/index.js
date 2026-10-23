@@ -1,7 +1,10 @@
 import './assets/css/main.css';
 import { backendConfig, externalConfig, targetConfig } from './config.js';
+import { buildSubUrl, parseBackendVersion, supportsUaPrefix, usesUaPrefix, validateUa } from './suburl.js';
 
 let subUrl = '';
+// backend url -> { extended, version } from /version
+const backendInfo = new Map();
 
 // Theme management
 class ThemeManager {
@@ -340,30 +343,44 @@ function copyText(copyStr) {
     });
 }
 
+function backendLabel(backend) {
+    const info = backend.version;
+    if (info && info.extended) return `${backend.label} [Extended ${info.version}]`;
+    return backend.label;
+}
+
+function isValidConfigRef(config) {
+    try {
+        new URL(config);
+        return true;
+    } catch (e) {
+        return /^[\w.\-\/]+\.(ini|toml|ya?ml|conf)$/i.test(config);
+    }
+}
+
+// The ua: source prefix only works on SubConverter-Extended >= v1.10.4 with Clash output.
+async function ensureUaSupported(data) {
+    if (!usesUaPrefix(data)) return true;
+    const err = validateUa(data.ua);
+    if (err) {
+        showToast(err, 'error');
+        return false;
+    }
+    if ((data.target || '').split('&')[0] !== 'clash') {
+        showToast('订阅 UA 仅适用于 Clash 输出', 'error');
+        return false;
+    }
+    let info = backendInfo.get(data.backend);
+    if (!info) info = await checkBackendVersion(data.backend);
+    if (!supportsUaPrefix(info)) {
+        showToast('订阅 UA 需要 SubConverter-Extended v1.10.4 及以上的后端', 'error');
+        return false;
+    }
+    return true;
+}
+
 function generateSubUrl(data) {
-    const backend = data.backend;
-    let originUrl = data.url;
-    originUrl = encodeURIComponent(originUrl.replace(/(\n|\r|\n\r)/g, '|'));
-
-    let newSubUrl = `${backend}&url=${originUrl}&target=${data.target}`;
-
-    if (data.config) {
-        newSubUrl += `&config=${encodeURIComponent(data.config)}`;
-    }
-
-    if (data.include) {
-        newSubUrl += `&include=${encodeURIComponent(data.include)}`;
-    }
-
-    if (data.exclude) {
-        newSubUrl += `&exclude=${encodeURIComponent(data.exclude)}`;
-    }
-
-    if (data.name) {
-        newSubUrl += `&filename=${encodeURIComponent(data.name)}`;
-    }
-
-    newSubUrl += `&emoji=${data.emoji || 'false'}&append_type=${data.append_type || 'false'}&append_info=${data.append_info || 'false'}&scv=${data.scv || 'false'}&udp=${data.udp || 'false'}&list=${data.list || 'false'}&sort=${data.sort || 'false'}&fdn=${data.fdn || 'false'}&insert=${data.insert || 'false'}`;
+    const newSubUrl = buildSubUrl(data);
     subUrl = newSubUrl;
     $('#result').val(subUrl);
     
@@ -471,7 +488,7 @@ function handleBackendChange() {
 }
 
 // Form submission handler
-function handleFormSubmit(event) {
+async function handleFormSubmit(event) {
     event.preventDefault();
     
     const formData = new FormData(event.target);
@@ -510,10 +527,8 @@ function handleFormSubmit(event) {
             return;
         }
         // Validate URL format
-        try {
-            new URL(config);
-        } catch (e) {
-            showToast('自定义配置链接格式不正确，请输入有效的URL', 'error');
+        if (!isValidConfigRef(config)) {
+            showToast('自定义配置格式不正确，请输入有效的URL或后端本地路径（如 config/xxx.ini）', 'error');
             return;
         }
     } else {
@@ -537,9 +552,11 @@ function handleFormSubmit(event) {
         list: formData.get('list') === 'on' ? 'true' : 'false',
         sort: formData.get('sort') === 'on' ? 'true' : 'false',
         fdn: formData.get('fdn') === 'on' ? 'true' : 'false',
-        insert: formData.get('insert') === 'on' ? 'true' : 'false'
+        insert: formData.get('insert') === 'on' ? 'true' : 'false',
+        ua: (formData.get('ua') || '').trim()
     };
     
+    if (!(await ensureUaSupported(data))) return;
     generateSubUrl(data);
 }
 
@@ -609,7 +626,7 @@ function handleQrCode() {
 }
 
 // Clash QR Code button handler
-function handleClashQrCode() {
+async function handleClashQrCode() {
     // Get form data first
     const form = document.getElementById('optionsForm');
     if (!form) {
@@ -661,10 +678,8 @@ function handleClashQrCode() {
             return;
         }
         // Validate URL format
-        try {
-            new URL(config);
-        } catch (e) {
-            showToast('自定义配置链接格式不正确，请输入有效的URL', 'error');
+        if (!isValidConfigRef(config)) {
+            showToast('自定义配置格式不正确，请输入有效的URL或后端本地路径（如 config/xxx.ini）', 'error');
             return;
         }
     } else {
@@ -688,33 +703,13 @@ function handleClashQrCode() {
         list: formData.get('list') === 'on' ? 'true' : 'false',
         sort: formData.get('sort') === 'on' ? 'true' : 'false',
         fdn: formData.get('fdn') === 'on' ? 'true' : 'false',
-        insert: formData.get('insert') === 'on' ? 'true' : 'false'
+        insert: formData.get('insert') === 'on' ? 'true' : 'false',
+        ua: (formData.get('ua') || '').trim()
     };
     
     // Generate subscription URL
-    const backend_url = data.backend;
-    let originUrl = data.url;
-    originUrl = encodeURIComponent(originUrl.replace(/(\n|\r|\n\r)/g, '|'));
-
-    let newSubUrl = `${backend_url}&url=${originUrl}&target=${data.target}`;
-
-    if (data.config) {
-        newSubUrl += `&config=${encodeURIComponent(data.config)}`;
-    }
-
-    if (data.include) {
-        newSubUrl += `&include=${encodeURIComponent(data.include)}`;
-    }
-
-    if (data.exclude) {
-        newSubUrl += `&exclude=${encodeURIComponent(data.exclude)}`;
-    }
-
-    if (data.name) {
-        newSubUrl += `&filename=${encodeURIComponent(data.name)}`;
-    }
-
-    newSubUrl += `&emoji=${data.emoji || 'false'}&append_type=${data.append_type || 'false'}&append_info=${data.append_info || 'false'}&scv=${data.scv || 'false'}&udp=${data.udp || 'false'}&list=${data.list || 'false'}&sort=${data.sort || 'false'}&fdn=${data.fdn || 'false'}&insert=${data.insert || 'false'}`;
+    if (!(await ensureUaSupported(data))) return;
+    const newSubUrl = buildSubUrl(data);
     
     subUrl = newSubUrl;
     
@@ -780,8 +775,9 @@ async function checkBackendVersion(backend) {
         clearTimeout(timeoutId);
         
         if (response.ok) {
-            const data = await response.text();
-            return data.trim() || 'Unknown';
+            const info = parseBackendVersion(await response.text());
+            if (info) backendInfo.set(backend, info);
+            return info;
         }
         return null;
     } catch (error) {
@@ -850,7 +846,7 @@ async function initializeBackends() {
             // Add Lfree backend first
             const lfreeOpt = document.createElement('option');
             lfreeOpt.value = lfreeBackend.value;
-            lfreeOpt.textContent = `${lfreeBackend.label} ⚡ 推荐`;
+            lfreeOpt.textContent = `${backendLabel(lfreeBackend)} ⚡ 推荐`;
             lfreeOpt.selected = shouldSelectLfree;
             backendHeaderSelect.appendChild(lfreeOpt);
             
@@ -866,7 +862,7 @@ async function initializeBackends() {
             otherBackends.forEach(backend => {
                 const opt = document.createElement('option');
                 opt.value = backend.value;
-                opt.textContent = backend.label;
+                opt.textContent = backendLabel(backend);
                 backendHeaderSelect.appendChild(opt);
             });
         } else {
@@ -875,11 +871,11 @@ async function initializeBackends() {
                 const opt = document.createElement('option');
                 opt.value = backend.value;
                 if (index === 0 && !hasSelectedInitial) {
-                    opt.textContent = `${backend.label} ⚡ 最快`;
+                    opt.textContent = `${backendLabel(backend)} ⚡ 最快`;
                     opt.selected = true;
                     currentSelected = backend;
                 } else {
-                    opt.textContent = backend.label;
+                    opt.textContent = backendLabel(backend);
                 }
                 backendHeaderSelect.appendChild(opt);
             });

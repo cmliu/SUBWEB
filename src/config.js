@@ -69,6 +69,9 @@ export const backendConfig = [
     }, {
         label: '自建服务',
         value: 'http://localhost:25500/sub?'
+    }, {
+        label: '自建 Extended 服务',
+        value: 'http://localhost:25510/sub?'
     }];
 export const externalConfig = [{
     label: 'CM规则',
